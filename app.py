@@ -4,7 +4,6 @@ import numpy as np
 import plotly.graph_objects as go
 import plotly.express as px
 import json
-import requests
 import io
 import lightgbm as lgb
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
@@ -101,45 +100,46 @@ def load_m5_data():
 
 
 # ── Claude API — Column Mapping ───────────────────────────────
-def map_columns_with_claude(columns: list, sample_rows: str) -> dict:
-    prompt = f"""You are a data analyst. A user uploaded a retail sales CSV dataset.
+def map_columns_local(columns: list) -> dict:
+    """Rule-based column mapping — no API needed, works offline, zero cost."""
+    cols_lower = {c.lower(): c for c in columns}
 
-Column names: {columns}
+    def find(keywords):
+        # Exact match first
+        for kw in keywords:
+            for col_lower, col_orig in cols_lower.items():
+                if col_lower == kw:
+                    return col_orig
+        # Partial match second
+        for kw in keywords:
+            for col_lower, col_orig in cols_lower.items():
+                if kw in col_lower:
+                    return col_orig
+        return None
 
-First 3 rows sample:
-{sample_rows}
+    mapping = {
+        'date'    : find(['date', 'transaction_date', 'time', 'datetime',
+                          'day', 'period', 'month', 'week', 'timestamp']),
+        'store_id': find(['store_id', 'store', 'outlet', 'outlet_name',
+                          'location', 'branch', 'shop', 'site', 'market']),
+        'sales'   : find(['qty_sold', 'units_sold', 'qty', 'quantity',
+                          'units', 'sold', 'sales', 'volume', 'count', 'demand']),
+        'category': find(['category', 'product_type', 'cat', 'type', 'dept',
+                          'department', 'class', 'segment', 'group']),
+        'price'   : find(['unit_price', 'price', 'cost', 'rate',
+                          'sell_price', 'value', 'amount']),
+        'event'   : find(['promo_event', 'event', 'promo', 'promotion',
+                          'holiday', 'occasion', 'campaign', 'special']),
+        'item_id' : find(['sku_id', 'sku', 'item', 'product', 'item_id',
+                          'product_id', 'pid', 'code', 'barcode']),
+    }
 
-Map these columns to the required fields below. Return ONLY a valid JSON object, no explanation, no markdown fences.
+    missing = [k for k in ['date', 'store_id', 'sales'] if not mapping[k]]
+    if missing:
+        return {"error": f"Could not detect mandatory columns: {missing}. "
+                         f"Please use the manual override below."}
 
-Required fields:
-- "date": column containing dates/timestamps
-- "store_id": column identifying store/location/outlet
-- "category": column for product category/department/type (null if missing)
-- "sales": column for units sold/quantity/sales volume
-- "price": column for price/cost (null if missing)
-- "event": column for events/holidays/promotions (null if missing)
-- "item_id": column for product/item/SKU identifier (null if missing)
-
-If date, sales or store_id are missing set: {{"error": "missing mandatory columns: <list>"}}
-
-Return exactly this format with real column names or null:
-{{"date": "col","store_id": "col","category": "col_or_null","sales": "col","price": "col_or_null","event": "col_or_null","item_id": "col_or_null"}}"""
-
-    try:
-        response = requests.post(
-            "https://api.anthropic.com/v1/messages",
-            headers={"Content-Type": "application/json"},
-            json={
-                "model"     : "claude-sonnet-4-20250514",
-                "max_tokens": 500,
-                "messages"  : [{"role": "user", "content": prompt}]
-            }
-        )
-        text = response.json()['content'][0]['text'].strip()
-        text = text.replace('```json', '').replace('```', '').strip()
-        return json.loads(text)
-    except Exception as e:
-        return {"error": str(e)}
+    return mapping
 
 
 # ── Feature Engineering ───────────────────────────────────────
@@ -572,19 +572,15 @@ Your CSV can have **any column names** — Claude will map them automatically.
             st.error(f"Failed to read CSV: {e}")
             st.stop()
 
-        # Step 2 — Claude mapping
-        st.markdown("### Step 2 — AI Column Detection")
-        with st.spinner("🤖 Claude is analyzing your columns..."):
-            mapping = map_columns_with_claude(
-                raw_df.columns.tolist(),
-                raw_df.head(3).to_string(index=False)
-            )
+        # Step 2 — Local mapping
+        st.markdown("### Step 2 — Auto Column Detection")
+        with st.spinner("🔍 Detecting columns..."):
+            mapping = map_columns_local(raw_df.columns.tolist())
 
         if "error" in mapping:
-            st.error(f"Column mapping failed: {mapping['error']}")
-            st.stop()
+            st.warning(f"⚠️ {mapping['error']}")
 
-        st.markdown("**Claude's mapping:**")
+        st.markdown("**Detected mapping:**")
         icons = {"date":"📅","store_id":"🏪","category":"📦",
                  "sales":"📈","price":"💰","event":"🎉","item_id":"🏷️"}
         cols  = st.columns(4)
