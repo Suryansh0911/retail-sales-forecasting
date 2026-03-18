@@ -99,9 +99,8 @@ def load_m5_data():
         return None, None, None, False
 
 
-# ── Claude API — Column Mapping ───────────────────────────────
+# ─────────────────────────────── Column Mapping ───────────────────────────────
 def map_columns_local(columns: list) -> dict:
-    """Rule-based column mapping — no API needed, works offline, zero cost."""
     cols_lower = {c.lower(): c for c in columns}
 
     def find(keywords):
@@ -521,8 +520,7 @@ elif page == "📁 Upload Your Dataset":
 
     st.markdown("<div class='main-title'>📁 Upload Your Retail Dataset</div>",
                 unsafe_allow_html=True)
-    st.markdown("<div class='subtitle'>Upload any retail CSV — Claude AI auto-detects columns, "
-                "engineers features, trains LightGBM and generates your dashboard.</div>",
+    st.markdown("<div class='subtitle'>Upload any retail CSV</div>",
                 unsafe_allow_html=True)
     st.markdown("<hr class='divider'>", unsafe_allow_html=True)
 
@@ -530,7 +528,7 @@ elif page == "📁 Upload Your Dataset":
     with col1:
         st.markdown("### What You Need")
         st.markdown("""
-Your CSV can have **any column names** — Claude will map them automatically.
+Your CSV can have **any column names**
 
 **Required (minimum):**
 - A **date** column
