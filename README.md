@@ -7,7 +7,7 @@ End-to-end retail sales forecasting on the M5 Walmart dataset with per-store Lig
 - Upload any retail CSV — Claude AI auto-detects columns, trains LightGBM, generates dashboard
 
 ## Stack
-Python · Pandas · LightGBM · Plotly · Streamlit · Claude API
+Python · Pandas · LightGBM · Plotly · Streamlit 
 
 ## Run Locally
 pip install -r requirements.txt
