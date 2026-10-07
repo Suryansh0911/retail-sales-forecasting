@@ -712,6 +712,6 @@ Your CSV can have **any column names**
 
     st.markdown("<hr class='divider'>", unsafe_allow_html=True)
     st.markdown("<center style='color:#4a4f6a; font-size:0.8rem;'>"
-                "🛒 Retail Sales Forecasting · AI Column Detection · "
+                "🛒 Retail Sales Forecasting · Rule-based Column Detection · "
                 "LightGBM · Streamlit + Plotly</center>",
                 unsafe_allow_html=True)
