@@ -673,7 +673,7 @@ Your CSV can have **any column names**
             st.markdown("<div class='main-title'>📊 Custom Dataset Dashboard</div>",
                         unsafe_allow_html=True)
             st.markdown(f"<div class='subtitle'>{uploaded_file.name} · "
-                        f"LightGBM · Auto-mapped by Claude AI</div>",
+                        f"LightGBM · Column names are auto detected.</div>",
                         unsafe_allow_html=True)
         with c2:
             st.markdown("<br>", unsafe_allow_html=True)
@@ -703,7 +703,7 @@ Your CSV can have **any column names**
         <div class='upload-box'>
             <h3 style='color:#4A90D9'>⬆️ Upload a CSV to get started</h3>
             <p style='color:#8b8fa8'>Any retail CSV with date, store and sales columns</p>
-            <p style='color:#8b8fa8'>Claude AI maps your columns automatically</p>
+            <p style='color:#8b8fa8'>Rule-based column detection</p>
         </div>
         """, unsafe_allow_html=True)
         st.markdown("<br>", unsafe_allow_html=True)
